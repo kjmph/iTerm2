@@ -178,7 +178,7 @@
                                                     before:NO
                                                    profile:profile
                                              targetSession:[[self.delegate realParentWindow] currentSession]
-                                                completion:^(PTYSession *session) {
+                                                completion:^(PTYSession *session, BOOL ok) {
         [formerSession activateSessionAndTab];
         completion(session);
     }

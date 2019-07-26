@@ -155,6 +155,7 @@ extern NSString *const iTermAdvancedSettingsDidChange;
 + (int)minimumWeightDifferenceForBoldFont;
 + (double)minRunningTime;
 + (int)minTabWidth;
++ (BOOL)multiserver;
 + (BOOL)navigatePanesInReadingOrder;
 + (BOOL)neverWarnAboutMeta;
 + (BOOL)neverWarnAboutOverrides;

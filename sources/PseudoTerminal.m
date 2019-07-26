@@ -7779,8 +7779,8 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                       before:(BOOL)before
                      profile:(Profile *)theBookmark
                targetSession:(PTYSession *)targetSession
-                  completion:(void (^)(PTYSession *))completion
-                       ready:(void (^)(BOOL ok))ready {
+                  completion:(void (^)(PTYSession *, BOOL ok))completion
+                       ready:(void (^)(PTYSession *, BOOL ok))ready {
     if ([targetSession isTmuxClient]) {
         [self willSplitTmuxPane];
         TmuxController *controller = [targetSession tmuxController];
@@ -7792,20 +7792,20 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                          completion:^(int wp) {
             if (wp < 0) {
                 if (completion) {
-                    completion(nil);
+                    completion(nil, NO);
                 }
                 if (ready) {
-                    ready(NO);
+                    ready(nil, NO);
                 }
                 return;
             }
 
             [controller whenPaneRegistered:wp call:^(PTYSession *newSession) {
                 if (completion) {
-                    completion(newSession);
+                    completion(newSession, YES);
                 }
                 if (ready) {
-                    ready(YES);
+                    ready(newSession, YES);
                 }
             }];
         }];
@@ -7822,7 +7822,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                                                  oldCWD:oldCWD
                                              completion:ready];
             if (completion) {
-                completion(session);
+                completion(session, YES);
             }
         }];
         return;
@@ -7836,7 +7836,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                                          oldCWD:nil
                                      completion:ready];
     if (completion) {
-        completion(session);
+        completion(session, YES);
     }
 }
 
@@ -7845,7 +7845,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                         profile:(Profile *)theBookmark
                   targetSession:(PTYSession *)targetSession
                          oldCWD:(NSString *)oldCWD
-                     completion:(void (^)(BOOL))completion {
+                     completion:(void (^)(PTYSession *, BOOL))completion {
     if ([targetSession isTmuxClient]) {
         [self willSplitTmuxPane];
         TmuxController *controller = [targetSession tmuxController];
@@ -7856,7 +7856,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                    initialDirectory:[iTermInitialDirectory initialDirectoryFromProfile:targetSession.profile objectType:iTermPaneObject]
                          completion:nil];
         if (completion) {
-            completion(NO);
+            completion(nil, NO);
         }
         return nil;
     }
@@ -10169,7 +10169,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                       withCommand:(NSString *)command
                       environment:(NSDictionary *)environment
                    didMakeSession:(void (^)(PTYSession *session))didMakeSession
-                       completion:(void (^)(BOOL ok))completion {
+                       completion:(void (^)(PTYSession *, BOOL ok))completion {
     PTYSession *currentSession = [self sessionForDirectoryRecycling];
     if (!currentSession) {
         PTYSession *newSession = [self createTabWithProfile:profile
@@ -10204,7 +10204,7 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                          withCommand:(NSString *)command
                          environment:(NSDictionary *)environment
                    previousDirectory:(NSString *)previousDirectory
-                          completion:(void (^)(BOOL ok))completion {
+                          completion:(void (^)(PTYSession *, BOOL ok))completion {
     iTermObjectType objectType;
     if ([_contentView.tabView numberOfTabViewItems] == 0) {
         objectType = iTermWindowObject;
@@ -10238,7 +10238,11 @@ static CGFloat iTermDimmingAmount(PSMTabBarControl *tabView) {
                                                  isUTF8:nil
                                           substitutions:nil
                                        windowController:self
-                                             completion:completion];
+                                             completion:^(PTYSession * _Nullable newSession, BOOL ok) {
+        if (completion) {
+            completion(newSession, ok);
+        }
+    }];
 
     // On Lion, a window that can join all spaces can't go fullscreen.
     if ([self numberOfTabs] == 1) {
